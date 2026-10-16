@@ -41,6 +41,7 @@ CURSO.registrarModulo({
   <p>Antes de iniciarmos os estudos deste módulo, queremos saber sua opinião sincera:</p>
   <p><strong>Você acha possível que a surdez possa deixar de ser vista socialmente como uma deficiência para ser vista como uma diferença linguística? Por quê?</strong></p>
   <p class="nota"><em>(Não existe resposta "certa" ou "errada" neste momento. Queremos apenas entender sua percepção inicial sobre o tema. Seja honesto!)</em></p>
+  <div data-reflexao="m1-reflexao-inicial" data-rotulo="Sua resposta"></div>
 </div>`
     },
 

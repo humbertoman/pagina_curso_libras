@@ -15,7 +15,7 @@
   --tema-acento: #2563eb; --tema-acento-suave: #eff6ff; --tema-acento-borda: #bfdbfe;
 }
 [data-tema="m1"] { --tema-de:#1e293b; --tema-ate:#0f172a; --tema-acento:#2563eb; --tema-acento-suave:#eff6ff; --tema-acento-borda:#bfdbfe; }
-[data-tema="m2"] { --tema-de:#4f46e5; --tema-ate:#7c3aed; --tema-acento:#4f46e5; --tema-acento-suave:#eef2ff; --tema-acento-borda:#c7d2fe; }
+[data-tema="m2"] { --tema-de:#9333ea; --tema-ate:#4f46e5; --tema-flip-ate:#7c3aed; --tema-acento:#4f46e5; --tema-acento-suave:#eef2ff; --tema-acento-borda:#c7d2fe; }
 /* m3, m4, m5: provisórios — serão ajustados quando cada módulo for inserido */
 [data-tema="m3"] { --tema-de:#0f766e; --tema-ate:#115e59; --tema-acento:#0d9488; --tema-acento-suave:#f0fdfa; --tema-acento-borda:#99f6e4; }
 [data-tema="m4"] { --tema-de:#be123c; --tema-ate:#9f1239; --tema-acento:#e11d48; --tema-acento-suave:#fff1f2; --tema-acento-borda:#fecdd3; }
@@ -238,7 +238,7 @@ body.travar-rolagem { overflow: hidden; }
 .flipcard-inner { position:relative; width:100%; height:100%; transition: transform .6s; transform-style: preserve-3d; }
 .flipcard.flipped .flipcard-inner { transform: rotateY(180deg); }
 .flipcard-front, .flipcard-back { position:absolute; inset:0; border-radius:.9rem; overflow:hidden; -webkit-backface-visibility:hidden; backface-visibility:hidden; }
-.flipcard-front { display:flex; align-items:center; justify-content:center; padding:.75rem; text-align:center; color:#fff; font-weight:700; font-size:1.05rem; line-height:1.25; background: linear-gradient(135deg, var(--tema-acento), var(--tema-ate)); }
+.flipcard-front { display:flex; align-items:center; justify-content:center; padding:.75rem; text-align:center; color:#fff; font-weight:700; font-size:1.05rem; line-height:1.25; background: linear-gradient(135deg, var(--tema-acento), var(--tema-flip-ate, var(--tema-ate))); }
 .flipcard-back { transform: rotateY(180deg); background:#000; }
 .flipcard-back img { width:100%; height:100%; object-fit:cover; }
 @media (min-width: 640px) { .flipcard-container { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:1rem; } }
@@ -286,6 +286,48 @@ body.travar-rolagem { overflow: hidden; }
 
 /* Blocos de glosa (ex.: EU AJUDAR-VOCÊ) */
 .glosa { background:#1e293b; color:#e2e8f0; border-radius:1rem; padding:1rem 1.25rem; margin:1.5rem 0; overflow-x:auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:.95rem; line-height:1.7; white-space:pre; }
+
+/* Reflexão: caixa de texto salva só no aparelho do aluno */
+.reflexao { margin-top: 1.25rem; }
+.reflexao-rotulo { display:block; font-weight:700; color:#0f172a; margin-bottom:.5rem; }
+.reflexao-campo { display:block; width:100%; min-height:8rem; padding:.85rem 1rem; font:inherit; font-size:1rem; line-height:1.6; color:#1e293b; background:#fff; border:1.5px solid #cbd5e1; border-radius:.85rem; resize:vertical; }
+.reflexao-campo:focus { outline:none; border-color: var(--tema-acento); box-shadow:0 0 0 3px var(--tema-acento-borda); }
+.reflexao-status { margin-top:.5rem; font-size:.8rem; color:#64748b; }
+
+/* Botão que abre pop-up, link de autor e conteúdo do pop-up */
+.botao-modal { display:flex; align-items:center; justify-content:center; min-height:48px; margin:1.75rem auto; padding:.7rem 1.75rem; border-radius:999px; background:#1e293b; color:#fff; font-weight:700; box-shadow:0 6px 18px rgba(15,23,42,.2); transition: background .2s, transform .1s; }
+.botao-modal:hover { background:#0f172a; }
+.botao-modal:active { transform: scale(.98); }
+.link-autor { color: var(--tema-acento); font-weight:700; text-decoration:underline; text-underline-offset:2px; text-align:left; }
+.modal-caixa p + p { margin-top:.65rem; }
+.modal-foto { width:120px; height:120px; border-radius:999px; object-fit:cover; margin:.25rem auto 1rem; }
+
+/* Figura, título centralizado, definições dentro do destaque */
+.figura { margin:1.75rem 0; }
+.figura img { width:100%; border-radius:1rem; box-shadow:0 10px 30px rgba(15,23,42,.12); }
+.figura figcaption { text-align:center; color:#64748b; font-size:.9rem; margin-top:.6rem; }
+.titulo-centro { text-align:center; font-weight:700; color:#0f172a; margin:1.75rem 0 .75rem; }
+.destaque h3 { margin:.9rem 0 .15rem; font-size:1.05rem; }
+
+/* Três cartões com GIF (descrição / manipulação / incorporação) */
+.cards-gif { display:grid; gap:1rem; margin:1.75rem 0; }
+.card-gif { background:#fff; border:1px solid #e2e8f0; border-radius:1rem; padding:1rem; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+.card-gif h3 { text-align:center; margin-bottom:.75rem; font-size:1rem; letter-spacing:.04em; }
+.card-gif-img { aspect-ratio:3/4; border-radius:.75rem; overflow:hidden; background:#f1f5f9; }
+.card-gif-img img { width:100%; height:100%; object-fit:cover; }
+.card-gif p { margin-top:.75rem; text-align:center; color:#475569; font-size:.95rem; line-height:1.55; }
+.card-gif-img { max-width: 260px; margin: 0 auto; }
+@media (min-width: 640px) { .cards-gif { grid-template-columns: repeat(3, 1fr); } .card-gif-img { max-width: none; } }
+
+/* Tabelas no celular: texto menor e quebra de linha para caber sem rolar */
+@media (max-width: 639px) {
+  .tabela-rolagem th, .tabela-rolagem td { padding:.55rem .6rem; font-size:.84rem; line-height:1.4; }
+  .tabela-rolagem th { white-space: normal; }
+}
+
+/* Quiz do Lumi mais alto (associação, arrastar etc.) */
+.embed-lumi-alto { height: min(90vh, 760px); }
+@media (min-width: 640px) { .embed-lumi-alto { height: 720px; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }

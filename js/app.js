@@ -217,6 +217,9 @@
     // Carrosséis de GIFs (cada um com seu próprio estado)
     raiz.querySelectorAll('.gif-carousel').forEach(iniciarCarrossel);
 
+    // Caixas de reflexão (texto salvo só neste aparelho)
+    raiz.querySelectorAll('[data-reflexao]').forEach(iniciarReflexao);
+
     // Tabelas: envolve em contêiner com rolagem horizontal
     raiz.querySelectorAll('table').forEach(t => {
       if (t.parentElement.classList.contains('tabela-rolagem')) return;
@@ -335,6 +338,28 @@
     if (ms > 0) { timer = setInterval(() => mostrar(atual + 1), ms); temporizadores.push(timer); }
 
     mostrar(0);
+  }
+
+  /* ---------- Reflexão (substitui o fórum; sem servidor) ---------- */
+  // Uso: <div data-reflexao="m2-tem-diferenca" data-rotulo="Sua resposta"></div>
+  // O texto é salvo a cada tecla no localStorage deste navegador. O professor NÃO recebe.
+  function iniciarReflexao(caixa) {
+    const id = caixa.dataset.reflexao;
+    const campoId = 'reflexao-' + id;
+    const chave = 'reflexao-' + id;
+    caixa.innerHTML =
+      `<label class="reflexao-rotulo" for="${esc(campoId)}">${esc(caixa.dataset.rotulo || 'Sua resposta')}</label>` +
+      `<textarea id="${esc(campoId)}" class="reflexao-campo" rows="5" placeholder="Escreva aqui..."></textarea>` +
+      `<p class="reflexao-status" role="status" aria-live="polite"></p>`;
+    const campo = caixa.querySelector('textarea');
+    const status = caixa.querySelector('.reflexao-status');
+    const aviso = 'Sua resposta fica salva só neste aparelho. O professor não a recebe.';
+    campo.value = memoria.ler(chave, '');
+    status.textContent = campo.value ? 'Resposta salva neste aparelho.' : aviso;
+    campo.addEventListener('input', () => {
+      if (campo.value.trim()) { memoria.gravar(chave, campo.value); status.textContent = 'Salvo neste aparelho.'; }
+      else { memoria.apagar(chave); status.textContent = aviso; }
+    });
   }
 
   /* ---------- Modal / Pop-up ---------- */
