@@ -220,6 +220,9 @@
     // Caixas de reflexão (texto salvo só neste aparelho)
     raiz.querySelectorAll('[data-reflexao]').forEach(iniciarReflexao);
 
+    // Atividades (digitar, escolher, associar)
+    raiz.querySelectorAll('.atividade').forEach(iniciarAtividade);
+
     // Tabelas: envolve em contêiner com rolagem horizontal
     raiz.querySelectorAll('table').forEach(t => {
       if (t.parentElement.classList.contains('tabela-rolagem')) return;
@@ -360,6 +363,164 @@
       if (campo.value.trim()) { memoria.gravar(chave, campo.value); status.textContent = 'Salvo neste aparelho.'; }
       else { memoria.apagar(chave); status.textContent = aviso; }
     });
+  }
+
+  /* ---------- Atividades: digitar, escolher e associar ----------
+     <div class="atividade" data-atividade="lista">   → todas as questões + um botão "Verificar" geral
+     <div class="atividade" data-atividade="passos">  → uma questão por vez, com setas e pontos
+     Cada <div class="ativ-questao" data-resposta="certa|outra-aceita"> traz UM campo:
+     texto (<input type="text">), lista (<select>) ou opções (<input type="radio">).
+     Corrigidas no próprio aparelho; nada é enviado a servidor. */
+  let seqAtividade = 0;
+  const normalizar = s => String(s ?? '').trim().toLowerCase().replace(/\s+/g, '');
+
+  function lerResposta(q) {
+    const lista = q.querySelector('select');
+    if (lista) return lista.value;
+    if (q.querySelector('input[type="radio"]')) return q.querySelector('input[type="radio"]:checked')?.value || '';
+    return q.querySelector('input[type="text"]')?.value || '';
+  }
+  function avaliarQuestao(q) {
+    const resposta = normalizar(lerResposta(q));
+    const fb = q.querySelector('.ativ-feedback');
+    const escolha = !!q.querySelector('select, input[type="radio"]');
+    q.classList.remove('certa', 'errada', 'vazia');
+    let estado;
+    if (!resposta) { estado = 'vazia'; fb.textContent = escolha ? '⚠️ Escolha uma opção.' : '⚠️ Digite uma resposta.'; }
+    else if ((q.dataset.resposta || '').split('|').some(r => normalizar(r) === resposta)) { estado = 'certa'; fb.textContent = '✅ Correto!'; }
+    else { estado = 'errada'; fb.textContent = '❌ Incorreto. Tente de novo.'; }
+    q.classList.add(estado);
+    q.dataset.avaliada = resposta; // guarda o que foi corrigido (um simples "sair do campo" não apaga a correção)
+    return estado;
+  }
+  function embaralharOpcoes(lista) {
+    const [, ...resto] = [...lista.options]; // a primeira ("Selecione...") fica no topo
+    for (let i = resto.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [resto[i], resto[j]] = [resto[j], resto[i]];
+    }
+    lista.append(...resto);
+  }
+
+  function iniciarAtividade(ativ) {
+    const n = ++seqAtividade;
+    const questoes = [...ativ.querySelectorAll('.ativ-questao')];
+    const total = questoes.length;
+    if (!total) return;
+    const passos = ativ.dataset.atividade === 'passos';
+    let aoMudar = () => {};
+
+    questoes.forEach((q, i) => {
+      if (!q.querySelector('.ativ-feedback')) {
+        const fb = document.createElement('p');
+        fb.className = 'ativ-feedback';
+        fb.setAttribute('role', 'status');
+        fb.setAttribute('aria-live', 'polite');
+        q.appendChild(fb);
+      }
+      q.querySelectorAll('input[type="radio"]').forEach(r => { r.name = `ativ-${n}-q${i}`; });
+      const rotulo = q.querySelector('label.ativ-rotulo');
+      const campo = q.querySelector('input[type="text"], select');
+      if (rotulo && campo) { campo.id = `ativ-${n}-c${i}`; rotulo.htmlFor = campo.id; }
+      q.querySelectorAll('select[data-embaralhar]').forEach(embaralharOpcoes);
+      const limpar = () => {
+        if (q.dataset.avaliada !== undefined && normalizar(lerResposta(q)) === q.dataset.avaliada) return;
+        delete q.dataset.avaliada;
+        q.classList.remove('certa', 'errada', 'vazia');
+        q.querySelector('.ativ-feedback').textContent = '';
+        aoMudar();
+      };
+      q.addEventListener('input', limpar);
+      q.addEventListener('change', limpar);
+    });
+
+    const resultado = document.createElement('p');
+    resultado.className = 'ativ-resultado';
+    resultado.setAttribute('role', 'status');
+    resultado.setAttribute('aria-live', 'polite');
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'ativ-verificar';
+    botao.textContent = 'Verificar';
+
+    if (!passos) {
+      // Todas as questões de uma vez
+      botao.classList.add('ativ-verificar-geral');
+      botao.textContent = ativ.dataset.rotuloBotao || 'Verificar todas as respostas';
+      botao.addEventListener('click', () => {
+        const estados = questoes.map(avaliarQuestao);
+        const certas = estados.filter(e => e === 'certa').length;
+        resultado.textContent = estados.every(e => e === 'vazia')
+          ? '⚠️ Responda pelo menos uma questão.'
+          : `Você acertou ${certas} de ${total}${certas === total ? ' 🎉' : ''}`;
+      });
+      ativ.append(botao, resultado);
+      return;
+    }
+
+    // Uma questão por vez
+    let atual = 0;
+    const iframes = questoes.map(q => q.querySelector('iframe'));
+    iframes.forEach(f => { // vídeos só carregam quando a questão aparece (e param ao sair dela)
+      if (f && f.getAttribute('src')) { f.dataset.src = f.getAttribute('src'); f.removeAttribute('src'); }
+    });
+
+    const pontos = document.createElement('div');
+    pontos.className = 'ativ-pontos';
+    questoes.forEach((_, k) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-label', `Ir para a questão ${k + 1} de ${total}`);
+      b.addEventListener('click', () => ir(k, true));
+      pontos.appendChild(b);
+    });
+    const nav = document.createElement('div');
+    nav.className = 'ativ-nav';
+    const seta = (rot, simbolo) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ativ-seta';
+      b.setAttribute('aria-label', rot);
+      b.innerHTML = simbolo;
+      return b;
+    };
+    const anterior = seta('Questão anterior', '&#10094;');
+    const proxima = seta('Próxima questão', '&#10095;');
+    nav.append(anterior, botao, proxima);
+    ativ.append(pontos, nav, resultado);
+
+    function placar() {
+      const certas = questoes.filter(q => q.classList.contains('certa')).length;
+      resultado.textContent = `Questão ${atual + 1} de ${total} · Acertos: ${certas}`;
+      questoes.forEach((q, k) => {
+        pontos.children[k].dataset.estado = q.classList.contains('certa') ? 'certa' : q.classList.contains('errada') ? 'errada' : '';
+      });
+    }
+    function ir(k, rolar) {
+      atual = Math.max(0, Math.min(total - 1, k));
+      questoes.forEach((q, i) => {
+        q.hidden = i !== atual;
+        const f = iframes[i];
+        if (!f) return;
+        if (i === atual) { if (!f.getAttribute('src') && f.dataset.src) f.src = f.dataset.src; }
+        else if (f.getAttribute('src')) f.removeAttribute('src');
+      });
+      [...pontos.children].forEach((p, i) => p.setAttribute('aria-current', String(i === atual)));
+      anterior.disabled = atual === 0;
+      proxima.disabled = atual === total - 1;
+      placar();
+      if (rolar && ativ.getBoundingClientRect().top < 0) ativ.scrollIntoView({ block: 'start' });
+    }
+    aoMudar = placar;
+
+    const verificar = () => { avaliarQuestao(questoes[atual]); placar(); };
+    botao.addEventListener('click', verificar);
+    anterior.addEventListener('click', () => ir(atual - 1, true));
+    proxima.addEventListener('click', () => ir(atual + 1, true));
+    ativ.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.matches?.('input[type="text"]')) { e.preventDefault(); verificar(); }
+    });
+    ir(0, false);
   }
 
   /* ---------- Modal / Pop-up ---------- */
