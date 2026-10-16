@@ -372,9 +372,11 @@
      texto (<input type="text">), lista (<select>) ou opções (<input type="radio">).
      Corrigidas no próprio aparelho; nada é enviado a servidor. */
   let seqAtividade = 0;
-  const normalizar = s => String(s ?? '').trim().toLowerCase().replace(/\s+/g, '');
+  const normalizar = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, '');
 
   function lerResposta(q) {
+    const montada = q.querySelector('.ord-resposta');
+    if (montada) return [...montada.children].map(b => b.dataset.id).join(',');
     const lista = q.querySelector('select');
     if (lista) return lista.value;
     if (q.querySelector('input[type="radio"]')) return q.querySelector('input[type="radio"]:checked')?.value || '';
@@ -384,9 +386,10 @@
     const resposta = normalizar(lerResposta(q));
     const fb = q.querySelector('.ativ-feedback');
     const escolha = !!q.querySelector('select, input[type="radio"]');
+    const ordenar = !!q.querySelector('.ord-resposta');
     q.classList.remove('certa', 'errada', 'vazia');
     let estado;
-    if (!resposta) { estado = 'vazia'; fb.textContent = escolha ? '⚠️ Escolha uma opção.' : '⚠️ Digite uma resposta.'; }
+    if (!resposta) { estado = 'vazia'; fb.textContent = ordenar ? '⚠️ Monte a sequência.' : escolha ? '⚠️ Escolha uma opção.' : '⚠️ Digite uma resposta.'; }
     else if ((q.dataset.resposta || '').split('|').some(r => normalizar(r) === resposta)) { estado = 'certa'; fb.textContent = '✅ Correto!'; }
     else { estado = 'errada'; fb.textContent = '❌ Incorreto. Tente de novo.'; }
     q.classList.add(estado);
@@ -400,6 +403,26 @@
       [resto[i], resto[j]] = [resto[j], resto[i]];
     }
     lista.append(...resto);
+  }
+
+  // Ordenar: toque num item para levá-lo à sequência; toque de novo para devolvê-lo ao banco
+  function iniciarOrdenar(q) {
+    const banco = q.querySelector('.ord-banco');
+    const resposta = q.querySelector('.ord-resposta');
+    if (!banco || !resposta) return;
+    resposta.dataset.vazio = resposta.dataset.vazio || 'Toque nos itens para montar a sequência';
+    const itens = [...banco.children];
+    for (let i = itens.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [itens[i], itens[j]] = [itens[j], itens[i]];
+    }
+    banco.append(...itens);
+    q.addEventListener('click', e => {
+      const item = e.target.closest('.ord-item');
+      if (!item || !q.contains(item)) return;
+      (item.parentElement === banco ? resposta : banco).appendChild(item);
+      q.dispatchEvent(new Event('change', { bubbles: true }));
+    });
   }
 
   function iniciarAtividade(ativ) {
@@ -423,6 +446,7 @@
       const campo = q.querySelector('input[type="text"], select');
       if (rotulo && campo) { campo.id = `ativ-${n}-c${i}`; rotulo.htmlFor = campo.id; }
       q.querySelectorAll('select[data-embaralhar]').forEach(embaralharOpcoes);
+      iniciarOrdenar(q);
       const limpar = () => {
         if (q.dataset.avaliada !== undefined && normalizar(lerResposta(q)) === q.dataset.avaliada) return;
         delete q.dataset.avaliada;
