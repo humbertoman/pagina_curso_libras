@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Curso de Libras</title>
+  <meta name="theme-color" content="#0f172a">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body data-tema="m1">
+
+  <a href="#pagina" class="pular-link">Pular para o conteúdo</a>
+
+  <!-- ===== Topo fixo: título + abas dos módulos ===== -->
+  <header id="topo" class="tema-gradiente">
+    <div class="topo-linha">
+      <button id="btn-abrir-sumario" class="topo-botao so-mobile" type="button"
+              aria-label="Abrir sumário do módulo" aria-controls="sumario" aria-expanded="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      </button>
+      <div class="topo-textos">
+        <p class="topo-sobretitulo">Curso de Libras</p>
+        <p id="topo-titulo" class="topo-titulo"></p>
+      </div>
+    </div>
+    <nav id="abas-modulos" class="abas sem-barra" aria-label="Módulos do curso"></nav>
+  </header>
+
+  <!-- ===== Sumário (gaveta no celular, coluna fixa no computador) ===== -->
+  <div id="sumario-fundo" class="sumario-fundo" hidden></div>
+  <aside id="sumario" class="sumario" aria-label="Sumário do módulo">
+    <div class="sumario-cabecalho">
+      <div class="sumario-cabecalho-linha">
+        <p id="sumario-titulo" class="sumario-titulo"></p>
+        <button id="btn-fechar-sumario" class="sumario-fechar so-mobile" type="button" aria-label="Fechar sumário">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="progresso" aria-hidden="true"><div id="progresso-barra" class="progresso-barra"></div></div>
+      <p id="progresso-texto" class="progresso-texto"></p>
+    </div>
+    <ol id="lista-topicos" class="lista-topicos"></ol>
+    <div class="sumario-rodape">
+      <button id="btn-reiniciar" type="button" class="link-discreto">Apagar marcações de visita</button>
+    </div>
+  </aside>
+
+  <!-- ===== Área da página ===== -->
+  <main id="principal">
+    <div class="principal-largura">
+      <header id="cabecalho-pagina"></header>
+      <article id="pagina" class="conteudo" tabindex="-1"></article>
+    </div>
+  </main>
+
+  <!-- ===== Navegação Anterior / Próximo ===== -->
+  <nav id="rodape-nav" class="rodape-nav" aria-label="Navegação entre tópicos"></nav>
+
+  <!-- Motor primeiro, depois os módulos (cada um se registra) -->
+  <script src="js/app.js"></script>
+  <script src="modulos/modulo-1.js"></script>
+</body>
+</html>
